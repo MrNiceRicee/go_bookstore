@@ -1,0 +1,10 @@
+CREATE TABLE "Books" (
+  _id SERIAL NOT NULL,
+  "title" VARCHAR(255) NOT NULL,
+  "author" VARCHAR(255) NOT NULL,
+  "genre" VARCHAR(255),
+  "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+
+  PRIMARY KEY (_id)
+)
