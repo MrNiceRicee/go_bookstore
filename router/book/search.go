@@ -44,8 +44,8 @@ func searchDB(queryParams validQueries) ([]models.Book, error) {
 	for rows.Next() {
 		var book models.Book
 		err = rows.Scan(&book.Id,
-			&book.Author,
 			&book.Title,
+			&book.Author,
 			&book.Genre,
 			&book.CreatedAt,
 			&book.UpdatedAt)

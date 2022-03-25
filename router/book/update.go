@@ -85,11 +85,11 @@ func updateBook(book models.Book) (models.Book, error) {
 	db := connection.DB
 
 	query := `UPDATE "Books"
-						SET "title"=$2,
-								"author"=$3,
-								"genre"=$4,
-								"updatedAt"=$5
-						WHERE "_id"=$1
+						SET "title"=$1,
+								"author"=$2,
+								"genre"=$3,
+								"updatedAt"=$4
+						WHERE "_id"=$5
 						RETURNING "_id",
 											"title",
 											"author",
@@ -100,11 +100,11 @@ func updateBook(book models.Book) (models.Book, error) {
 
 	var update models.Book
 	row := db.QueryRow(query,
-		book.Id,
 		book.Title,
 		book.Author,
 		book.Genre,
-		time.Now())
+		time.Now(),
+		book.Id)
 
 	err := row.Scan(&update.Id,
 		&update.Title,

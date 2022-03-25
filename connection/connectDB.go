@@ -10,6 +10,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
+// used for DB pooling
 var DB *sql.DB
 
 type dbENV struct {
@@ -59,8 +60,10 @@ func CreateConnection() {
 		panic(err)
 	}
 
+	// establish how many connections we want to have in the pool
 	db.SetMaxIdleConns(50)
 	db.SetMaxOpenConns(200)
+	// TODO: figure out how to do both pool & clients.
 
 	DB = db
 }

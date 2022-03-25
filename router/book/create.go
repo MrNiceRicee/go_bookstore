@@ -32,25 +32,17 @@ func validateCreate(req *http.Request) (models.Book, error) {
 func createBook(book models.Book) (models.Book, error) {
 	db := connection.DB
 
-	query := `INSERT INTO "Books"("title", "author", "genre")
-						VALUES($1,$2,$3)
+	query := `INSERT INTO "Books"("author", "title", "genre")
+						VALUES($1, $2, $3)
 						RETURNING "_id"
 						`
 
 	var created models.Book
-	res, err := db.Query(query, book.Title, book.Author, book.Genre)
+
+	err := db.QueryRow(query, book.Author, book.Title, book.Genre).Scan(&created.Id)
 
 	if err != nil {
 		return created, err
-	}
-
-	defer res.Close()
-
-	for res.Next() {
-		err = res.Scan(&created.Id)
-		if err != nil {
-			return created, err
-		}
 	}
 
 	return created, nil
