@@ -1,16 +1,23 @@
 package bookRoutes
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"server/connection"
 	"server/models"
 	response "server/router/handlers"
+	"server/router/utility"
+
 	"strconv"
+
+	sq "github.com/Masterminds/squirrel"
 )
 
 type validQueries struct {
-	Limit int `json:"limit"`
+	Limit  int           `json:"limit,omitempty"`
+	Filter models.Filter `json:"filter,omitempty"`
 }
 
 type searchResults struct {
@@ -24,16 +31,29 @@ func defaultQuery() validQueries {
 	}
 }
 
+func getValidFilters() []string {
+	return []string{
+		"_id", "author", "title", "genre",
+	}
+}
+
 func searchDB(queryParams validQueries) ([]models.Book, error) {
 	db := connection.DB
 
 	var books []models.Book
 
-	query := `SELECT "_id", "title", "author", "genre", "createdAt", "updatedAt"
-						FROM "Books"
-						LIMIT $1`
+	selectBooks := sq.Select("_id", "title", "author", "genre", `"createdAt"`, `"updatedAt"`).From(`"Books"`)
 
-	rows, err := db.Query(query, queryParams.Limit)
+	selectBooks = utility.BuildWhere(selectBooks, getValidFilters(), queryParams.Filter)
+	selectBooks = selectBooks.Limit(uint64(queryParams.Limit)).PlaceholderFormat(sq.Dollar)
+
+	sql, args, err := selectBooks.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("%s, %+v\n", sql, args)
+	rows, err := db.Query(sql, args...)
 
 	if err != nil {
 		return nil, err
@@ -71,6 +91,15 @@ func validateQueries(req *http.Request) (validQueries, error) {
 		}
 		baseQuery.Limit = limit
 	}
+
+	var receivedFilter models.Filter
+	err := json.Unmarshal([]byte(req.FormValue("filter")), &receivedFilter)
+	if err != nil {
+		// filter is not required, so we can ignore the error
+		return baseQuery, nil
+	}
+	baseQuery.Filter = receivedFilter
+
 	return baseQuery, nil
 }
 
@@ -79,7 +108,7 @@ func Search(res http.ResponseWriter, req *http.Request) {
 	// not sure about the validation for queries
 	query, err := validateQueries(req)
 	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
+		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
 

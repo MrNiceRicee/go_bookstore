@@ -12,3 +12,5 @@ type Book struct {
 type Response struct {
 	Data interface{} `json:"data,omitempty"`
 }
+
+type Filter map[string]interface{}

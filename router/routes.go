@@ -2,6 +2,7 @@ package router
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"server/middleware"
 	bookRoutes "server/router/book"
@@ -10,7 +11,7 @@ import (
 )
 
 func healthCheck(res http.ResponseWriter, req *http.Request) {
-	json.NewEncoder(res).Encode("Hey!")
+	json.NewEncoder(res).Encode("Welcome to the book store!")
 }
 
 func Routes() *mux.Router {
@@ -20,11 +21,11 @@ func Routes() *mux.Router {
 	router.Use(middleware.HeaderMiddleware)
 	router.Use(middleware.LogRequest)
 
-	router.HandleFunc("/", healthCheck).Methods("GET", "OPTIONS")
-
 	// set subroutes
 	book := router.PathPrefix("/books").Subrouter()
 	bookRoutes.Router(book)
 
+	router.HandleFunc("/", healthCheck).Methods("GET", "OPTIONS")
+	fmt.Println("server started")
 	return router
 }
